@@ -3,8 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.familysearch.david.fox</groupId>
-  <artifactId>simple-service</artifactId>
-  <name>simple-service</name>
+  <artifactId>simple-service-int-test</artifactId>
+  <name>simple-service-int-test</name>
   <version>1.0-SNAPSHOT</version>
 
   <parent>
