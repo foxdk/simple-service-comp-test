@@ -26,7 +26,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // todo: is this the best example of a simple test? go through tutorials
-// todo: this project is really an example of component testing, not integration testing, so rename it
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
