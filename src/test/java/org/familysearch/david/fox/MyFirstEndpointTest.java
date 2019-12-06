@@ -25,8 +25,6 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// todo: is this the best example of a simple test? go through tutorials
-
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -68,7 +66,7 @@ public class MyFirstEndpointTest {
 
   @Test
   public void testGetAThing_restEndpointCall() throws Exception {
-    String serviceResponseBody = "{'field1': 'abcdef', 'field2': 1234 }";
+    String serviceResponseBody = "{'field1': 'wxyz', 'field2': 9876 }";
     String url = "http://some-remote-service/some-path";
     mockServer.reset();
     mockServer.expect(requestTo(url))
