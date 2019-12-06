@@ -13,10 +13,7 @@ public class ApplicationConfig {
 
   @Bean
   public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
-    //todo: is this the simplest way to create a RestTemplate? Go through spring boot tutorials
-    return restTemplateBuilder
-        .requestFactory(() -> new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()))
-        .build();
+    return restTemplateBuilder.build();
   }
 
 }

@@ -36,10 +36,9 @@ public class MyFirstEndpointTest {
   @Autowired
   private MyFirstEndpoint myFirstEndpoint;
 
-  // note that this RestTemplate must be the one used by MyFirstEndpoint above
   @SuppressWarnings("unused")
   @Autowired
-  private RestTemplate restTemplate;
+  private RestTemplate restTemplate; // note that this RestTemplate must be the one used by MyFirstEndpoint above
 
   @SuppressWarnings("unused")
   @Autowired
@@ -52,29 +51,35 @@ public class MyFirstEndpointTest {
     this.mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 
+  @Test
   public void testGetAThing_directEndpointCall() {
     String serviceResponseBody = "{'field1': 'abcdef', 'field2': 1234 }";
     String url = "http://some-remote-service/some-path";
-    this.mockServer.expect(requestTo(url))
+    mockServer.reset();
+    mockServer.expect(requestTo(url))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
 
     ResponseEntity<String> responseEntity = myFirstEndpoint.getAThing();
 
     assertEquals(serviceResponseBody, responseEntity.getBody());
+    mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 
   @Test
   public void testGetAThing_restEndpointCall() throws Exception {
     String serviceResponseBody = "{'field1': 'abcdef', 'field2': 1234 }";
     String url = "http://some-remote-service/some-path";
-    this.mockServer.expect(requestTo(url))
+    mockServer.reset();
+    mockServer.expect(requestTo(url))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
 
     mvc.perform(MockMvcRequestBuilders.get("/first/endpoint").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(MockMvcResultMatchers.content().string(equalTo(serviceResponseBody)));
+
+    mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 
 }
