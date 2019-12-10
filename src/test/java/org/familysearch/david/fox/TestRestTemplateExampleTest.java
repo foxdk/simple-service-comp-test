@@ -17,27 +17,18 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class MyFirstEndpointTest {
-
-  @SuppressWarnings("unused")
-  @Autowired
-  private MyFirstEndpoint myFirstEndpoint;
+public class TestRestTemplateExampleTest {
 
   @SuppressWarnings("unused")
   @Autowired
@@ -50,46 +41,11 @@ public class MyFirstEndpointTest {
   @LocalServerPort
   int randomServerPort;
 
-  @SuppressWarnings("unused")
-  @Autowired
-  private MockMvc mvc;
-
   private MockRestServiceServer mockServer;
 
   @Before
   public void setUp() {
     this.mockServer = MockRestServiceServer.createServer(restTemplate);
-  }
-
-  @Test
-  public void testGetAThing_usingDirectEndpointCall() {
-    String serviceResponseBody = "{'field1': 'abcdef', 'field2': 1234 }";
-    String url = "http://some-remote-service/some-path";
-    mockServer.reset();
-    mockServer.expect(requestTo(url))
-        .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
-
-    ResponseEntity<String> responseEntity = myFirstEndpoint.getAThing();
-
-    assertEquals(serviceResponseBody, responseEntity.getBody());
-    mockServer.verify(); //optional; this proves that the server call we expected was made
-  }
-
-  @Test
-  public void testGetAThing_usingMockMvc() throws Exception {
-    String serviceResponseBody = "{'field1': 'wxyz', 'field2': 9876 }";
-    String url = "http://some-remote-service/some-path";
-    mockServer.reset();
-    mockServer.expect(requestTo(url))
-        .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
-
-    mvc.perform(MockMvcRequestBuilders.get("/first/endpoint").accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(MockMvcResultMatchers.content().string(equalTo(serviceResponseBody)));
-
-    mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 
   @Test
