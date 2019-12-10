@@ -9,8 +9,11 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -19,6 +22,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
@@ -26,7 +31,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class MyFirstEndpointTest {
 
@@ -40,6 +45,13 @@ public class MyFirstEndpointTest {
 
   @SuppressWarnings("unused")
   @Autowired
+  private TestRestTemplate testRestTemplate;
+
+  @LocalServerPort
+  int randomServerPort;
+
+  @SuppressWarnings("unused")
+  @Autowired
   private MockMvc mvc;
 
   private MockRestServiceServer mockServer;
@@ -50,7 +62,7 @@ public class MyFirstEndpointTest {
   }
 
   @Test
-  public void testGetAThing_directEndpointCall() {
+  public void testGetAThing_usingDirectEndpointCall() {
     String serviceResponseBody = "{'field1': 'abcdef', 'field2': 1234 }";
     String url = "http://some-remote-service/some-path";
     mockServer.reset();
@@ -65,7 +77,7 @@ public class MyFirstEndpointTest {
   }
 
   @Test
-  public void testGetAThing_restEndpointCall() throws Exception {
+  public void testGetAThing_usingMockMvc() throws Exception {
     String serviceResponseBody = "{'field1': 'wxyz', 'field2': 9876 }";
     String url = "http://some-remote-service/some-path";
     mockServer.reset();
@@ -76,6 +88,27 @@ public class MyFirstEndpointTest {
     mvc.perform(MockMvcRequestBuilders.get("/first/endpoint").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(MockMvcResultMatchers.content().string(equalTo(serviceResponseBody)));
+
+    mockServer.verify(); //optional; this proves that the server call we expected was made
+  }
+
+  @Test
+  public void testGetAThing_usingTestRestTemplate() {
+    String serviceResponseBody = "{'field1': 'wxyz', 'field2': 9876 }";
+    String url = "http://some-remote-service/some-path";
+    mockServer.reset();
+    mockServer.expect(requestTo(url))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
+
+    URI uri = URI.create("http://localhost:" + randomServerPort + "/first/endpoint");
+
+    ResponseEntity<String> result = testRestTemplate.exchange(RequestEntity.get(uri)
+        .accept(MediaType.APPLICATION_JSON)
+        .build(), String.class);
+
+    assertEquals(200, result.getStatusCodeValue());
+    assertEquals(serviceResponseBody, result.getBody());
 
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
