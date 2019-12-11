@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -32,14 +33,14 @@ public class TestRestTemplateExampleTest {
 
   @SuppressWarnings("unused")
   @Autowired
-  private RestTemplate restTemplate; // note that this RestTemplate must be the one used by MyFirstEndpoint above
-
-  @SuppressWarnings("unused")
-  @Autowired
   private TestRestTemplate testRestTemplate;
 
   @LocalServerPort
   int randomServerPort;
+
+  @SuppressWarnings("unused")
+  @Autowired
+  private RestTemplate restTemplate; // note that this RestTemplate must be the one used by MyFirstEndpoint above
 
   private MockRestServiceServer mockServer;
 
@@ -49,22 +50,25 @@ public class TestRestTemplateExampleTest {
   }
 
   @Test
-  public void testGetAThing_usingTestRestTemplate() {
-    String serviceResponseBody = "{'field1': 'wxyz', 'field2': 9876 }";
-    String url = "http://some-remote-service/some-path";
+  public void normalFlowThroughBothLocalAndRemoteServices() {
+    String remoteServiceResponseBody = "{\"remoteServiceResponseCode\": \"def456\"}";
+    String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
-    mockServer.expect(requestTo(url))
+    mockServer.expect(requestTo(remoteServiceUrl))
         .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess(remoteServiceResponseBody, MediaType.APPLICATION_JSON));
 
-    URI uri = URI.create("http://localhost:" + randomServerPort + "/first/endpoint");
+    URI localServiceUrl = URI.create("http://localhost:" + randomServerPort + "/first/endpoint");
 
-    ResponseEntity<String> result = testRestTemplate.exchange(RequestEntity.get(uri)
+    ResponseEntity<ResponseSchema> responseEntity = testRestTemplate.exchange(RequestEntity.get(localServiceUrl)
         .accept(MediaType.APPLICATION_JSON)
-        .build(), String.class);
+        .build(), ResponseSchema.class);
 
-    assertEquals(200, result.getStatusCodeValue());
-    assertEquals(serviceResponseBody, result.getBody());
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    ResponseSchema responseSchema = responseEntity.getBody();
+    assertNotNull(responseSchema);
+    RemoteServiceResponseSchema remoteServiceResponse = responseSchema.getRemoteServiceResponse();
+    assertEquals("def456", remoteServiceResponse.getRemoteServiceResponseCode());
 
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }

@@ -10,13 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -42,16 +43,20 @@ public class DirectEndpointCallExampleTest {
 
   @Test
   public void normalFlowThroughBothLocalAndRemoteServices() {
-    String serviceResponseBody = "{'field1': 'abcdef', 'field2': 1234 }";
-    String url = "http://some-remote-service/some-path";
+    String remoteServiceResponseBody = "{\"remoteServiceResponseCode\": \"abc123\"}";
+    String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
-    mockServer.expect(requestTo(url))
+    mockServer.expect(requestTo(remoteServiceUrl))
         .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess(remoteServiceResponseBody, MediaType.APPLICATION_JSON));
 
-    ResponseEntity<String> responseEntity = myFirstEndpoint.getAThing();
+    ResponseEntity<ResponseSchema> responseEntity = myFirstEndpoint.getAThing();
 
-    assertEquals(serviceResponseBody, responseEntity.getBody());
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    ResponseSchema responseSchema = responseEntity.getBody();
+    assertNotNull(responseSchema);
+    RemoteServiceResponseSchema remoteServiceResponse = responseSchema.getRemoteServiceResponse();
+    assertEquals("abc123", remoteServiceResponse.getRemoteServiceResponseCode());
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 

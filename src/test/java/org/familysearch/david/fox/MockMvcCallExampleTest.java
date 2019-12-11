@@ -14,11 +14,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.client.RestTemplate;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,11 +30,11 @@ public class MockMvcCallExampleTest {
 
   @SuppressWarnings("unused")
   @Autowired
-  private RestTemplate restTemplate; // note that this RestTemplate must be the one used by MyFirstEndpoint above
+  private MockMvc mvc;
 
   @SuppressWarnings("unused")
   @Autowired
-  private MockMvc mvc;
+  private RestTemplate restTemplate; // note that this RestTemplate must be the one used by MyFirstEndpoint above
 
   private MockRestServiceServer mockServer;
 
@@ -45,16 +45,18 @@ public class MockMvcCallExampleTest {
 
   @Test
   public void normalFlowThroughBothLocalAndRemoteServices() throws Exception {
-    String serviceResponseBody = "{'field1': 'wxyz', 'field2': 9876 }";
-    String url = "http://some-remote-service/some-path";
+    String remoteServiceResponseBody = "{\"remoteServiceResponseCode\": \"abc123\"}";
+    String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
-    mockServer.expect(requestTo(url))
+    mockServer.expect(requestTo(remoteServiceUrl))
         .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess(serviceResponseBody, MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess(remoteServiceResponseBody, MediaType.APPLICATION_JSON));
 
-    mvc.perform(MockMvcRequestBuilders.get("/first/endpoint").accept(MediaType.APPLICATION_JSON))
+    MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get("/first/endpoint").accept(MediaType.APPLICATION_JSON);
+    mvc.perform(builder)
         .andExpect(status().isOk())
-        .andExpect(MockMvcResultMatchers.content().string(equalTo(serviceResponseBody)));
+        .andExpect(MockMvcResultMatchers.jsonPath("remoteServiceResponse.remoteServiceResponseCode")
+            .value("abc123"));
 
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }

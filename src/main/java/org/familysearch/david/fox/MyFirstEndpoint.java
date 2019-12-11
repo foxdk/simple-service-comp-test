@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.Objects;
 
 @SuppressWarnings("unused")
 @RestController
@@ -21,14 +20,28 @@ public class MyFirstEndpoint {
   private RestTemplate restTemplate;
 
   @GetMapping(path = "/endpoint")
-  public ResponseEntity<String> getAThing() {
+  public ResponseEntity<ResponseSchema> getAThing() {
 
     // make a call to a remote service, so that we have something interesting to test
     URI uri = URI.create("http://some-remote-service/some-path");
-    ResponseEntity<String> result = restTemplate.exchange(RequestEntity.get(uri)
+    ResponseEntity<RemoteServiceResponseSchema> responseEntity = restTemplate.exchange(RequestEntity.get(uri)
         .accept(MediaType.APPLICATION_JSON)
-        .build(), String.class);
+        .build(), RemoteServiceResponseSchema.class);
 
-    return ResponseEntity.ok(Objects.requireNonNull(result.getBody()));
+    // package up the response from the remote server and return our own schema object containing it
+    ResponseSchema responseSchema = mapResponse(responseEntity.getBody());
+    return ResponseEntity.ok(responseSchema);
+  }
+
+  private ResponseSchema mapResponse(RemoteServiceResponseSchema remoteServiceResponse) {
+    if (remoteServiceResponse == null) {
+      throw new IllegalArgumentException("remoteServiceResponse must not be null");
+    }
+    ResponseSchema responseSchema = new ResponseSchema();
+    responseSchema.setRemoteServiceResponse(remoteServiceResponse);
+    if (remoteServiceResponse.getRemoteServiceResponseCode() != null) {
+      responseSchema.setResponseCodeHash(remoteServiceResponse.getRemoteServiceResponseCode().hashCode());
+    }
+    return responseSchema;
   }
 }
