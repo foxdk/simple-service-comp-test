@@ -53,11 +53,11 @@ public class MockMvcCallExampleTest {
         .andRespond(withSuccess(remoteServiceResponseBody, MediaType.APPLICATION_JSON));
 
     MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get("/first/endpoint").accept(MediaType.APPLICATION_JSON);
+
     mvc.perform(builder)
         .andExpect(status().isOk())
         .andExpect(MockMvcResultMatchers.jsonPath("remoteServiceResponse.remoteServiceResponseCode")
             .value("abc123"));
-
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 

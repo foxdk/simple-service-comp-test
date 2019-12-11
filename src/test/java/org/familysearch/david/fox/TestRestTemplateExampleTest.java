@@ -24,10 +24,10 @@ import java.net.URI;
 
 import static org.junit.Assert.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class TestRestTemplateExampleTest {
 
@@ -59,7 +59,6 @@ public class TestRestTemplateExampleTest {
         .andRespond(withSuccess(remoteServiceResponseBody, MediaType.APPLICATION_JSON));
 
     URI localServiceUrl = URI.create("http://localhost:" + randomServerPort + "/first/endpoint");
-
     ResponseEntity<ResponseSchema> responseEntity = testRestTemplate.exchange(RequestEntity.get(localServiceUrl)
         .accept(MediaType.APPLICATION_JSON)
         .build(), ResponseSchema.class);
@@ -69,7 +68,40 @@ public class TestRestTemplateExampleTest {
     assertNotNull(responseSchema);
     RemoteServiceResponseSchema remoteServiceResponse = responseSchema.getRemoteServiceResponse();
     assertEquals("def456", remoteServiceResponse.getRemoteServiceResponseCode());
+    mockServer.verify(); //optional; this proves that the server call we expected was made
+  }
 
+  @Test
+  public void remoteServerReturns500() {
+    String remoteServiceUrl = "http://some-remote-service/some-path";
+    mockServer.reset();
+    mockServer.expect(requestTo(remoteServiceUrl))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+
+    URI localServiceUrl = URI.create("http://localhost:" + randomServerPort + "/first/endpoint");
+    ResponseEntity<ResponseSchema> responseEntity = testRestTemplate.exchange(RequestEntity.get(localServiceUrl)
+        .accept(MediaType.APPLICATION_JSON)
+        .build(), ResponseSchema.class);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+    mockServer.verify(); //optional; this proves that the server call we expected was made
+  }
+
+  @Test
+  public void remoteServerReturns400() {
+    String remoteServiceUrl = "http://some-remote-service/some-path";
+    mockServer.reset();
+    mockServer.expect(requestTo(remoteServiceUrl))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withStatus(HttpStatus.BAD_REQUEST));
+
+    URI localServiceUrl = URI.create("http://localhost:" + randomServerPort + "/first/endpoint");
+    ResponseEntity<ResponseSchema> responseEntity = testRestTemplate.exchange(RequestEntity.get(localServiceUrl)
+        .accept(MediaType.APPLICATION_JSON)
+        .build(), ResponseSchema.class);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 
