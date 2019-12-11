@@ -15,11 +15,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.junit.Assert.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -59,5 +61,63 @@ public class DirectEndpointCallExampleTest {
     assertEquals("abc123", remoteServiceResponse.getRemoteServiceResponseCode());
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
+
+  @Test
+  public void remoteServerReturns500() {
+    String remoteServiceUrl = "http://some-remote-service/some-path";
+    mockServer.reset();
+    mockServer.expect(requestTo(remoteServiceUrl))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+
+    try {
+      myFirstEndpoint.getAThing();
+      fail("expected exception");
+    }
+    catch (HttpServerErrorException e) {
+      assertTrue(e.getMessage(), true);
+    }
+
+    mockServer.verify(); //optional; this proves that the server call we expected was made
+  }
+
+  @Test
+  public void remoteServerReturns400() {
+    String remoteServiceUrl = "http://some-remote-service/some-path";
+    mockServer.reset();
+    mockServer.expect(requestTo(remoteServiceUrl))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withStatus(HttpStatus.BAD_REQUEST));
+
+    try {
+      myFirstEndpoint.getAThing();
+      fail("expected exception");
+    }
+    catch (HttpClientErrorException e) {
+      assertTrue(e.getMessage(), true);
+    }
+
+    mockServer.verify(); //optional; this proves that the server call we expected was made
+  }
+
+  @Test
+  public void localServerThrowsException() {
+    String remoteServiceUrl = "http://some-remote-service/some-path";
+    mockServer.reset();
+    mockServer.expect(requestTo(remoteServiceUrl))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess()); // the body returned will be null, causing an exception
+
+    try {
+      myFirstEndpoint.getAThing();
+      fail("expected exception");
+    }
+    catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage(), true);
+    }
+
+    mockServer.verify(); //optional; this proves that the server call we expected was made
+  }
+
 
 }

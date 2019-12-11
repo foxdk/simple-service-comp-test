@@ -105,4 +105,21 @@ public class TestRestTemplateExampleTest {
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 
+  @Test
+  public void localServerThrowsException() {
+    String remoteServiceUrl = "http://some-remote-service/some-path";
+    mockServer.reset();
+    mockServer.expect(requestTo(remoteServiceUrl))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess()); // the body returned will be null, causing an exception
+
+    URI localServiceUrl = URI.create("http://localhost:" + randomServerPort + "/first/endpoint");
+    ResponseEntity<ResponseSchema> responseEntity = testRestTemplate.exchange(RequestEntity.get(localServiceUrl)
+        .accept(MediaType.APPLICATION_JSON)
+        .build(), ResponseSchema.class);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+    mockServer.verify(); //optional; this proves that the server call we expected was made
+  }
+
 }
