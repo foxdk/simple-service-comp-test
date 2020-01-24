@@ -19,22 +19,26 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import org.familysearch.david.fox.schema.local.BuildingPermitSchema;
+
 import static org.junit.Assert.*;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class DirectEndpointCallExampleTest {
+public class PermitsEndpointTest_DirectEndpointCall {
 
   @SuppressWarnings("unused")
   @Autowired
-  private MyFirstEndpoint myFirstEndpoint;
+  private PermitsEndpoint permitsEndpoint; // this is our service's endpoint -- the endpoint under test
 
   @SuppressWarnings("unused")
   @Autowired
-  private RestTemplate restTemplate; // note that this RestTemplate must be the one used by MyFirstEndpoint above
+  private RestTemplate restTemplate; // note that this RestTemplate must be the one used by PermitsEndpoint above
 
   private MockRestServiceServer mockServer;
 
@@ -44,34 +48,37 @@ public class DirectEndpointCallExampleTest {
   }
 
   @Test
-  public void normalFlowThroughBothLocalAndRemoteServices() {
-    String remoteServiceResponseBody = "{\"remoteServiceResponseItem\": \"abc123\"}";
-    String remoteServiceUrl = "http://some-remote-service/some-path";
+  public void normalFlowThroughLocalAndRemoteServices() {
     mockServer.reset();
-    mockServer.expect(requestTo(remoteServiceUrl))
+
+    mockServer.expect(requestTo("http://properties-service/properties-by-permit-id/12345"))
         .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess(remoteServiceResponseBody, MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess("{\"propertyOwner\": \"Mike Jones\"}", MediaType.APPLICATION_JSON));
 
-    ResponseEntity<ResponseSchema> responseEntity = myFirstEndpoint.getAThing();
+    mockServer.expect(requestTo("http://loans-service/loans-by-permit-id/12345"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("{\"loanApproved\": \"true\"}", MediaType.APPLICATION_JSON));
 
-    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    ResponseSchema responseSchema = responseEntity.getBody();
-    assertNotNull(responseSchema);
-    RemoteServiceResponseSchema remoteServiceResponse = responseSchema.getRemoteServiceResponse();
-    assertEquals("abc123", remoteServiceResponse.getRemoteServiceResponseItem());
+    ResponseEntity<BuildingPermitSchema> buildingPermitResponse = permitsEndpoint.getBuildingPermit("12345");
+
+    assertEquals(HttpStatus.OK, buildingPermitResponse.getStatusCode());
+    BuildingPermitSchema buildingPermit = buildingPermitResponse.getBody();
+    assertNotNull(buildingPermit);
+    assertTrue(buildingPermit.getLoanApproved());
+    assertEquals("Mike Jones", buildingPermit.getPropertyOwner());
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 
   @Test
   public void remoteServerReturns500() {
-    String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
-    mockServer.expect(requestTo(remoteServiceUrl))
+
+    mockServer.expect(requestTo("http://properties-service/properties-by-permit-id/12345"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
 
     try {
-      myFirstEndpoint.getAThing();
+      permitsEndpoint.getBuildingPermit("12345");
       fail("expected exception");
     }
     catch (HttpServerErrorException e) {
@@ -83,14 +90,14 @@ public class DirectEndpointCallExampleTest {
 
   @Test
   public void remoteServerReturns400() {
-    String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
-    mockServer.expect(requestTo(remoteServiceUrl))
+
+    mockServer.expect(requestTo("http://properties-service/properties-by-permit-id/12345"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
     try {
-      myFirstEndpoint.getAThing();
+      permitsEndpoint.getBuildingPermit("12345");
       fail("expected exception");
     }
     catch (HttpClientErrorException e) {
@@ -102,22 +109,21 @@ public class DirectEndpointCallExampleTest {
 
   @Test
   public void localServerThrowsException() {
-    String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
-    mockServer.expect(requestTo(remoteServiceUrl))
+
+    mockServer.expect(requestTo("http://properties-service/properties-by-permit-id/12345"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess()); // the body returned will be null, causing an exception
 
     try {
-      myFirstEndpoint.getAThing();
+      permitsEndpoint.getBuildingPermit("12345");
       fail("expected exception");
     }
-    catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage(), true);
+    catch (RuntimeException e) {
+      assertEquals("properties service response body not expected to be null", e.getMessage());
     }
 
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
-
 
 }
