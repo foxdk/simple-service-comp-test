@@ -24,10 +24,19 @@ public class PermitsEndpoint {
   @Autowired
   private RestTemplate restTemplate;
 
+  /**
+   * This is an example of an orchestrating endpoint; we call two remote services, collect the results, and then return them.
+   */
   @GetMapping(path = "/building/{permitId}")
   public ResponseEntity<BuildingPermitSchema> getBuildingPermit(@PathVariable("permitId") String permitId) {
+
+    // call a remote service to get property information
     PropertySchema property = fetchProperty(permitId);
+
+    // call another remote service to get loan information
     LoanSchema loan = fetchLoan(permitId);
+
+    // collect and return the results
     BuildingPermitSchema buildingPermit = mapResponse(property, loan);
     return ResponseEntity.ok(buildingPermit);
   }
