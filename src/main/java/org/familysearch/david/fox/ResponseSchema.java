@@ -8,7 +8,7 @@ package org.familysearch.david.fox;
  */
 public class ResponseSchema {
   private RemoteServiceResponseSchema remoteServiceResponse;
-  private int responseCodeHash;
+  private int responseItemHash;
 
   public RemoteServiceResponseSchema getRemoteServiceResponse() {
     return remoteServiceResponse;
@@ -18,11 +18,11 @@ public class ResponseSchema {
     this.remoteServiceResponse = remoteServiceResponse;
   }
 
-  public int getResponseCodeHash() {
-    return responseCodeHash;
+  public int getResponseItemHash() {
+    return responseItemHash;
   }
 
-  public void setResponseCodeHash(int responseCodeHash) {
-    this.responseCodeHash = responseCodeHash;
+  public void setResponseItemHash(int responseItemHash) {
+    this.responseItemHash = responseItemHash;
   }
 }

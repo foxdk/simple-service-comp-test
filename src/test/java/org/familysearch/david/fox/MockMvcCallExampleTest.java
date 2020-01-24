@@ -45,7 +45,7 @@ public class MockMvcCallExampleTest {
 
   @Test
   public void normalFlowThroughBothLocalAndRemoteServices() throws Exception {
-    String remoteServiceResponseBody = "{\"remoteServiceResponseCode\": \"abc123\"}";
+    String remoteServiceResponseBody = "{\"remoteServiceResponseItem\": \"abc123\"}";
     String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
     mockServer.expect(requestTo(remoteServiceUrl))
@@ -56,7 +56,7 @@ public class MockMvcCallExampleTest {
 
     mvc.perform(builder)
         .andExpect(status().isOk())
-        .andExpect(MockMvcResultMatchers.jsonPath("remoteServiceResponse.remoteServiceResponseCode")
+        .andExpect(MockMvcResultMatchers.jsonPath("remoteServiceResponse.remoteServiceResponseItem")
             .value("abc123"));
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }

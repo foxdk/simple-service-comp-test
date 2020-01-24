@@ -39,8 +39,8 @@ public class MyFirstEndpoint {
     }
     ResponseSchema responseSchema = new ResponseSchema();
     responseSchema.setRemoteServiceResponse(remoteServiceResponse);
-    if (remoteServiceResponse.getRemoteServiceResponseCode() != null) {
-      responseSchema.setResponseCodeHash(remoteServiceResponse.getRemoteServiceResponseCode().hashCode());
+    if (remoteServiceResponse.getRemoteServiceResponseItem() != null) {
+      responseSchema.setResponseItemHash(remoteServiceResponse.getRemoteServiceResponseItem().hashCode());
     }
     return responseSchema;
   }

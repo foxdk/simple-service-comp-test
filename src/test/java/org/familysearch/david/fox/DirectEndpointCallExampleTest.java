@@ -45,7 +45,7 @@ public class DirectEndpointCallExampleTest {
 
   @Test
   public void normalFlowThroughBothLocalAndRemoteServices() {
-    String remoteServiceResponseBody = "{\"remoteServiceResponseCode\": \"abc123\"}";
+    String remoteServiceResponseBody = "{\"remoteServiceResponseItem\": \"abc123\"}";
     String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
     mockServer.expect(requestTo(remoteServiceUrl))
@@ -58,7 +58,7 @@ public class DirectEndpointCallExampleTest {
     ResponseSchema responseSchema = responseEntity.getBody();
     assertNotNull(responseSchema);
     RemoteServiceResponseSchema remoteServiceResponse = responseSchema.getRemoteServiceResponse();
-    assertEquals("abc123", remoteServiceResponse.getRemoteServiceResponseCode());
+    assertEquals("abc123", remoteServiceResponse.getRemoteServiceResponseItem());
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 

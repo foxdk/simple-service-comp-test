@@ -51,7 +51,7 @@ public class TestRestTemplateExampleTest {
 
   @Test
   public void normalFlowThroughBothLocalAndRemoteServices() {
-    String remoteServiceResponseBody = "{\"remoteServiceResponseCode\": \"def456\"}";
+    String remoteServiceResponseBody = "{\"remoteServiceResponseItem\": \"def456\"}";
     String remoteServiceUrl = "http://some-remote-service/some-path";
     mockServer.reset();
     mockServer.expect(requestTo(remoteServiceUrl))
@@ -67,7 +67,7 @@ public class TestRestTemplateExampleTest {
     ResponseSchema responseSchema = responseEntity.getBody();
     assertNotNull(responseSchema);
     RemoteServiceResponseSchema remoteServiceResponse = responseSchema.getRemoteServiceResponse();
-    assertEquals("def456", remoteServiceResponse.getRemoteServiceResponseCode());
+    assertEquals("def456", remoteServiceResponse.getRemoteServiceResponseItem());
     mockServer.verify(); //optional; this proves that the server call we expected was made
   }
 

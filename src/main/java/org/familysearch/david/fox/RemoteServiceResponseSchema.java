@@ -7,13 +7,13 @@ package org.familysearch.david.fox;
  * The response object that the remote service returns.
  */
 public class RemoteServiceResponseSchema {
-  private String remoteServiceResponseCode;
+  private String remoteServiceResponseItem;
 
-  public String getRemoteServiceResponseCode() {
-    return remoteServiceResponseCode;
+  public String getRemoteServiceResponseItem() {
+    return remoteServiceResponseItem;
   }
 
-  public void setRemoteServiceResponseCode(String remoteServiceResponseCode) {
-    this.remoteServiceResponseCode = remoteServiceResponseCode;
+  public void setRemoteServiceResponseItem(String remoteServiceResponseItem) {
+    this.remoteServiceResponseItem = remoteServiceResponseItem;
   }
 }
