@@ -30,7 +30,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class PermitsEndpointTest_DirectEndpointCall {
+public class PermitsEndpointUnitTest {
 
   @SuppressWarnings("unused")
   @Autowired
